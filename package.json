@@ -1,0 +1,35 @@
+{
+  "name": "@halo-lab/stream",
+  "type": "module",
+  "author": "Kapelianovych Yevhen",
+  "version": "0.0.1",
+  "license": "ISC",
+  "description": "A time based Iterator",
+  "repository": {
+    "url": "https://github.com/Halo-Lab/stream",
+    "type": "git"
+  },
+  "keywords": [
+    "Stream",
+    "Reactive"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.d.ts",
+    "index.js",
+    "package.json"
+  ],
+  "scripts": {
+    "test": "node --loader ts-node/esm --test index.test.ts"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1"
+  }
+}
