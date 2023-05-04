@@ -48,9 +48,11 @@ export const scan = operator(
       let intermediate = accumulator
 
       return source((value) => {
-        created && intermediate === undefined
-          ? intermediate = value
-          : push(intermediate = reduce(intermediate, value))
+        push(
+          intermediate = created && intermediate === undefined
+            ? value
+            : reduce(intermediate, value)
+        )
 
         if (created) created = false
       })
@@ -59,11 +61,34 @@ export const scan = operator(
   1
 )
 
+export const take = operator(
+  (source, amount) =>
+    from((push) => {
+      let stop
+
+      const clear = () => {
+        stop?.()
+        stop = null
+      }
+
+      stop = source((value) => {
+        if (amount > 0) {
+          push(value)
+
+          if (--amount <= 0) clear()
+        } else clear()
+      })
+
+      return clear
+    })
+)
+
 export default {
   of,
   map,
   from,
   scan,
+  take,
   filter,
   forEach
 }

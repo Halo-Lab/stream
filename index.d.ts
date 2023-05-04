@@ -28,12 +28,16 @@ export function scan<A, B>(accumulator: B, reduce: (accumulator: B, value: A) =>
 export function scan<A>(source: Stream<A>, reduce: (accumulator: A, value: A) => A): Stream<A>
 export function scan<A, B>(source: Stream<A>, accumulator: B, reduce: (accumulator: B, value: A) => B): Stream<B>
 
+export function take(amount: number): <A>(source: Stream<A>) => Stream<A>
+export function take<A>(source: Stream<A>, amount: number): Stream<A>
+
 type _Sink<A> = Sink<A>
 
 type _of = typeof of
 type _map = typeof map
 type _from = typeof from
 type _scan = typeof scan
+type _take = typeof take
 type _filter = typeof filter
 type _forEach = typeof forEach
 
@@ -45,6 +49,7 @@ declare namespace Stream {
   export const map: _map
   export const from: _from
   export const scan: _scan
+  export const take: _take
   export const filter: _filter
   export const forEach: _forEach
 }
