@@ -31,6 +31,15 @@ export function scan<A, B>(source: Stream<A>, accumulator: B, reduce: (accumulat
 export function take(amount: number): <A>(source: Stream<A>) => Stream<A>
 export function take<A>(source: Stream<A>, amount: number): Stream<A>
 
+export function skip(amount: number): <A>(source: Stream<A>) => Stream<A>
+export function skip<A>(source: Stream<A>, amount: number): Stream<A>
+
+export function takeWhile<A>(predicate: (value: A) => boolean): (source: Stream<A>) => Stream<A>
+export function takeWhile<A>(source: Stream<A>, predicate: (value: A) => boolean): Stream<A>
+
+export function skipWhile<A>(predicate: (value: A) => boolean): (source: Stream<A>) => Stream<A>
+export function skipWhile<A>(source: Stream<A>, predicate: (value: A) => boolean): Stream<A>
+
 type _Sink<A> = Sink<A>
 
 type _of = typeof of
@@ -38,8 +47,11 @@ type _map = typeof map
 type _from = typeof from
 type _scan = typeof scan
 type _take = typeof take
+type _skip = typeof skip
 type _filter = typeof filter
 type _forEach = typeof forEach
+type _skipWhile = typeof skipWhile
+type _takeWhile = typeof takeWhile
 
 declare namespace Stream {
   export type Self<A> = Stream<A>
@@ -50,8 +62,11 @@ declare namespace Stream {
   export const from: _from
   export const scan: _scan
   export const take: _take
+  export const skip: _skip
   export const filter: _filter
   export const forEach: _forEach
+  export const skipWhile: _skipWhile
+  export const takeWhile: _takeWhile
 }
 
 export default Stream
