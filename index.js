@@ -107,6 +107,46 @@ export const skipWhile = operator(
   }
 )
 
+export const unique = operator(
+  (source, selector = (value) => value, flushes) => {
+    const keys = new Set()
+
+    const filteredSource = filter(source, (value) => {
+      const key = selector(value)
+
+      if (keys.has(key)) return false
+      else {
+        keys.add(key)
+
+        return true
+      }
+    })
+
+    return from((push) => {
+      const stopFiltering = filteredSource(push)
+
+      const stopFlushing = flushes && flushes(() => keys.clear())
+
+      return () => {
+        stopFiltering()
+        stopFlushing?.()
+      }
+    })
+  }
+)
+
+export const merge = operator(
+  (source, other) => from((push) => {
+    const stopSource = source(push)
+    const stopOther = other(push)
+
+    return () => {
+      stopSource()
+      stopOther()
+    }
+  })
+)
+
 export default {
   of,
   map,
@@ -114,7 +154,9 @@ export default {
   scan,
   take,
   skip,
+  merge,
   filter,
+  unique,
   forEach,
   skipWhile,
   takeWhile

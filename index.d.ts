@@ -40,6 +40,12 @@ export function takeWhile<A>(source: Stream<A>, predicate: (value: A) => boolean
 export function skipWhile<A>(predicate: (value: A) => boolean): (source: Stream<A>) => Stream<A>
 export function skipWhile<A>(source: Stream<A>, predicate: (value: A) => boolean): Stream<A>
 
+export function unique<A, K>(selector?: (value: A) => K, flushes?: Stream<unknown>): (source: Stream<A>) => Stream<A>
+export function unique<A, K>(source: Stream<A>, selector?: (value: A) => K, flushes?: Stream<unknown>): Stream<A>
+
+export function merge<B>(other: Stream<B>): <A = B>(source: Stream<A>) => Stream<A | B>
+export function merge<A, B = A>(source: Stream<A>, other: Stream<B>): Stream<A | B>
+
 type _Sink<A> = Sink<A>
 
 type _of = typeof of
@@ -48,7 +54,9 @@ type _from = typeof from
 type _scan = typeof scan
 type _take = typeof take
 type _skip = typeof skip
+type _merge = typeof merge
 type _filter = typeof filter
+type _unique = typeof unique
 type _forEach = typeof forEach
 type _skipWhile = typeof skipWhile
 type _takeWhile = typeof takeWhile
@@ -63,7 +71,9 @@ declare namespace Stream {
   export const scan: _scan
   export const take: _take
   export const skip: _skip
+  export const merge: _merge
   export const filter: _filter
+  export const unique: _unique
   export const forEach: _forEach
   export const skipWhile: _skipWhile
   export const takeWhile: _takeWhile
