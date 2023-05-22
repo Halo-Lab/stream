@@ -40,8 +40,8 @@ export function takeWhile<A>(source: Stream<A>, predicate: (value: A) => boolean
 export function skipWhile<A>(predicate: (value: A) => boolean): (source: Stream<A>) => Stream<A>
 export function skipWhile<A>(source: Stream<A>, predicate: (value: A) => boolean): Stream<A>
 
-export function unique<A, K>(selector?: (value: A) => K, flushes?: Stream<unknown>): (source: Stream<A>) => Stream<A>
-export function unique<A, K>(source: Stream<A>, selector?: (value: A) => K, flushes?: Stream<unknown>): Stream<A>
+export function unique<A, K = A>(selector?: (value: A) => K, flushes?: Stream<unknown>): (source: Stream<A>) => Stream<A>
+export function unique<A, K = A>(source: Stream<A>, selector?: (value: A) => K, flushes?: Stream<unknown>): Stream<A>
 
 export function merge<B>(other: Stream<B>): <A = B>(source: Stream<A>) => Stream<A | B>
 export function merge<A, B = A>(source: Stream<A>, other: Stream<B>): Stream<A | B>
