@@ -14,7 +14,7 @@ export function from(source) {
 
 export function of(...values) {
   return from((push) => {
-    const iterator = values[Symbol.iterator]();
+    const iterator = values[Symbol.iterator]()
 
     Promise.resolve().then(() => {
       for (const value of iterator) push(value)
@@ -147,6 +147,19 @@ export const merge = operator(
   })
 )
 
+export const distinct = operator(
+  (source, compare = Object.is) => {
+    let firstSent = false
+    let previous
+
+    return filter(source, (value) => {
+      previous = value
+
+      return firstSent ? !compare(previous, value) : firstSent = true
+    })
+  }
+)
+
 export default {
   of,
   map,
@@ -158,6 +171,7 @@ export default {
   filter,
   unique,
   forEach,
+  distinct,
   skipWhile,
   takeWhile
 }

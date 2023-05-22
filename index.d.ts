@@ -46,6 +46,9 @@ export function unique<A, K = A>(source: Stream<A>, selector?: (value: A) => K, 
 export function merge<B>(other: Stream<B>): <A = B>(source: Stream<A>) => Stream<A | B>
 export function merge<A, B = A>(source: Stream<A>, other: Stream<B>): Stream<A | B>
 
+export function distinct<A>(compare?: (previous: A, next: A) => boolean): (source: Stream<A>) => Stream<A>
+export function distinct<A>(source: Stream<A>, compare?: (previous: A, next: A) => boolean): Stream<A>
+
 type _Sink<A> = Sink<A>
 
 type _of = typeof of
@@ -58,6 +61,7 @@ type _merge = typeof merge
 type _filter = typeof filter
 type _unique = typeof unique
 type _forEach = typeof forEach
+type _distinct = typeof distinct
 type _skipWhile = typeof skipWhile
 type _takeWhile = typeof takeWhile
 
@@ -75,6 +79,7 @@ declare namespace Stream {
   export const filter: _filter
   export const unique: _unique
   export const forEach: _forEach
+  export const distinct: _distinct
   export const skipWhile: _skipWhile
   export const takeWhile: _takeWhile
 }
