@@ -4,9 +4,13 @@ export interface Sink<A> {
 
 export interface Stream<A> {
   (sink: Sink<A>): VoidFunction
+  readonly '@@stream': Stream<A>
 }
 
 export function from<A>(source: (push: Sink<A>) => void | VoidFunction): Stream<A>
+
+export function isStream<A>(value: Stream<A>): true
+export function isStream<A>(value: unknown): value is Stream<A>
 
 export function of<const T extends readonly unknown[]>(...values: T): Stream<T[number]>
 
@@ -52,6 +56,7 @@ export function distinct<A>(source: Stream<A>, compare?: (previous: A, next: A) 
 type _Sink<A> = Sink<A>
 
 type _of = typeof of
+type _is = typeof isStream
 type _map = typeof map
 type _from = typeof from
 type _scan = typeof scan
@@ -70,6 +75,7 @@ declare namespace Stream {
   export type Sink<A> = _Sink<A>
 
   export const of: _of
+  export const is: _is
   export const map: _map
   export const from: _from
   export const scan: _scan

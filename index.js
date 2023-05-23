@@ -1,15 +1,25 @@
-function operator(finish, minimalArity = finish.length - 1) {
-  return (source, ...params) => params.length >= minimalArity
+const STREAM = '@@stream'
+
+function operator(finish) {
+  return (source, ...params) => isStream(source)
     ? finish(source, ...params)
     : (anotherSource) => finish(anotherSource, source, ...params)
 }
 
 export function from(source) {
-  return (sink) => {
+  const stream = (sink) => {
     const stop = source(sink)
 
     return () => stop?.()
   }
+
+  stream[STREAM] = stream
+
+  return stream
+}
+
+export function isStream(value) {
+  return typeof value === 'function' && value === value[STREAM]
 }
 
 export function of(...values) {
@@ -67,8 +77,7 @@ export const scan = operator(
         if (created) created = false
       })
     })
-  },
-  1
+  }
 )
 
 export const take = operator(
@@ -162,6 +171,7 @@ export const distinct = operator(
 
 export default {
   of,
+  is: isStream,
   map,
   from,
   scan,
