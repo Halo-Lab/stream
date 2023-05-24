@@ -7,30 +7,70 @@ export interface Stream<A> {
   readonly '@@stream': Stream<A>
 }
 
-export function from<A>(source: (push: Sink<A>) => void | VoidFunction): Stream<A>
+export function from<A>(
+  source: (push: Sink<A>) => void | VoidFunction
+): Stream<A>
 
 export function isStream<A>(value: Stream<A>): true
 export function isStream<A>(value: unknown): value is Stream<A>
 
-export function of<const T extends readonly unknown[]>(...values: T): Stream<T[number]>
+export function of<const T extends readonly unknown[]>(
+  ...values: T
+): Stream<T[number]>
 
-export function map<A, B>(callback: (value: A) => B): (source: Stream<A>) => Stream<B>
-export function map<A, B>(source: Stream<A>, callback: (value: A) => B): Stream<B>
+export function map<A, B>(
+  callback: (value: A) => B
+): (source: Stream<A>) => Stream<B>
+export function map<A, B>(
+  source: Stream<A>,
+  callback: (value: A) => B
+): Stream<B>
 
-export function filter(callback: BooleanConstructor): <A>(source: Stream<A>) => Stream<Exclude<A, null | undefined | 0 | '' | false>>
-export function filter<A, B extends A>(callback: (value: A) => value is B): (source: Stream<A>) => Stream<B>
-export function filter<A>(callback: (value: A) => boolean): (source: Stream<A>) => Stream<A>
-export function filter<A>(source: Stream<A>, callback: BooleanConstructor): Stream<Exclude<A, null | undefined | 0 | '' | false>>
-export function filter<A, B extends A>(source: Stream<A>, callback: (value: A) => value is B): Stream<B>
-export function filter<A>(source: Stream<A>, callback: (value: A) => boolean): Stream<A>
+export function filter(
+  callback: BooleanConstructor
+): <A>(
+  source: Stream<A>
+) => Stream<Exclude<A, null | undefined | 0 | '' | false>>
+export function filter<A, B extends A>(
+  callback: (value: A) => value is B
+): (source: Stream<A>) => Stream<B>
+export function filter<A>(
+  callback: (value: A) => boolean
+): (source: Stream<A>) => Stream<A>
+export function filter<A>(
+  source: Stream<A>,
+  callback: BooleanConstructor
+): Stream<Exclude<A, null | undefined | 0 | '' | false>>
+export function filter<A, B extends A>(
+  source: Stream<A>,
+  callback: (value: A) => value is B
+): Stream<B>
+export function filter<A>(
+  source: Stream<A>,
+  callback: (value: A) => boolean
+): Stream<A>
 
-export function forEach<A>(callback: Sink<A>): (source: Stream<A>) => VoidFunction
+export function forEach<A>(
+  callback: Sink<A>
+): (source: Stream<A>) => VoidFunction
 export function forEach<A>(source: Stream<A>, callback: Sink<A>): VoidFunction
 
-export function scan<A>(reduce: (accumulator: A, value: A) => A): (source: Stream<A>) => Stream<A>
-export function scan<A, B>(accumulator: B, reduce: (accumulator: B, value: A) => B): (source: Stream<A>) => Stream<B>
-export function scan<A>(source: Stream<A>, reduce: (accumulator: A, value: A) => A): Stream<A>
-export function scan<A, B>(source: Stream<A>, accumulator: B, reduce: (accumulator: B, value: A) => B): Stream<B>
+export function scan<A>(
+  reduce: (accumulator: A, value: A) => A
+): (source: Stream<A>) => Stream<A>
+export function scan<A, B>(
+  accumulator: B,
+  reduce: (accumulator: B, value: A) => B
+): (source: Stream<A>) => Stream<B>
+export function scan<A>(
+  source: Stream<A>,
+  reduce: (accumulator: A, value: A) => A
+): Stream<A>
+export function scan<A, B>(
+  source: Stream<A>,
+  accumulator: B,
+  reduce: (accumulator: B, value: A) => B
+): Stream<B>
 
 export function take(amount: number): <A>(source: Stream<A>) => Stream<A>
 export function take<A>(source: Stream<A>, amount: number): Stream<A>
@@ -38,20 +78,47 @@ export function take<A>(source: Stream<A>, amount: number): Stream<A>
 export function skip(amount: number): <A>(source: Stream<A>) => Stream<A>
 export function skip<A>(source: Stream<A>, amount: number): Stream<A>
 
-export function takeWhile<A>(predicate: (value: A) => boolean): (source: Stream<A>) => Stream<A>
-export function takeWhile<A>(source: Stream<A>, predicate: (value: A) => boolean): Stream<A>
+export function takeWhile<A>(
+  predicate: (value: A) => boolean
+): (source: Stream<A>) => Stream<A>
+export function takeWhile<A>(
+  source: Stream<A>,
+  predicate: (value: A) => boolean
+): Stream<A>
 
-export function skipWhile<A>(predicate: (value: A) => boolean): (source: Stream<A>) => Stream<A>
-export function skipWhile<A>(source: Stream<A>, predicate: (value: A) => boolean): Stream<A>
+export function skipWhile<A>(
+  predicate: (value: A) => boolean
+): (source: Stream<A>) => Stream<A>
+export function skipWhile<A>(
+  source: Stream<A>,
+  predicate: (value: A) => boolean
+): Stream<A>
 
-export function unique<A, K = A>(selector?: (value: A) => K, flushes?: Stream<unknown>): (source: Stream<A>) => Stream<A>
-export function unique<A, K = A>(source: Stream<A>, selector?: (value: A) => K, flushes?: Stream<unknown>): Stream<A>
+export function unique<A, K = A>(
+  selector?: (value: A) => K,
+  flushes?: Stream<unknown>
+): (source: Stream<A>) => Stream<A>
+export function unique<A, K = A>(
+  source: Stream<A>,
+  selector?: (value: A) => K,
+  flushes?: Stream<unknown>
+): Stream<A>
 
-export function merge<B>(other: Stream<B>): <A = B>(source: Stream<A>) => Stream<A | B>
-export function merge<A, B = A>(source: Stream<A>, other: Stream<B>): Stream<A | B>
+export function merge<B>(
+  other: Stream<B>
+): <A = B>(source: Stream<A>) => Stream<A | B>
+export function merge<A, B = A>(
+  source: Stream<A>,
+  other: Stream<B>
+): Stream<A | B>
 
-export function distinct<A>(compare?: (previous: A, next: A) => boolean): (source: Stream<A>) => Stream<A>
-export function distinct<A>(source: Stream<A>, compare?: (previous: A, next: A) => boolean): Stream<A>
+export function distinct<A>(
+  compare?: (previous: A, next: A) => boolean
+): (source: Stream<A>) => Stream<A>
+export function distinct<A>(
+  source: Stream<A>,
+  compare?: (previous: A, next: A) => boolean
+): Stream<A>
 
 type _Sink<A> = Sink<A>
 

@@ -1,11 +1,5 @@
 const STREAM = '@@stream'
 
-function operator(finish) {
-  return (source, ...params) => isStream(source)
-    ? finish(source, ...params)
-    : (anotherSource) => finish(anotherSource, source, ...params)
-}
-
 export function from(source) {
   const stream = (sink) => {
     const stop = source(sink)
@@ -36,92 +30,93 @@ export function of(...values) {
   })
 }
 
-export const map = operator(
-  (source, callback) =>
-    from((push) =>
-      source((value) => push(callback(value)))
-    )
-)
+export function map(source, callback) {
+  return callback
+    ? from((push) => source((value) => push(callback(value))))
+    : (anotherSource) => map(anotherSource, source)
+}
 
-export const filter = operator(
-  (source, callback) =>
-    from((push) =>
-      source(
-        (value) => {
+export function filter(source, callback) {
+  return callback
+    ? from((push) =>
+        source((value) => {
           if (callback(value)) push(value)
-        }
+        })
       )
-    )
-)
+    : (anotherSource) => filter(anotherSource, source)
+}
 
-export const forEach = operator(
-  (source, callback) => source(callback)
-)
+export function forEach(source, callback) {
+  return callback
+    ? source(callback)
+    : (anotherSource) => forEach(anotherSource, source)
+}
 
-export const scan = operator(
-  (source, accumulator, reduce) => {
-    if (reduce === undefined)
-      (reduce = accumulator, accumulator = undefined)
+export function scan(source, accumulator, reduce = accumulator) {
+  return isStream(source)
+    ? from((push) => {
+        let created = true
+        let intermediate = accumulator
 
-    return from((push) => {
-      let created = true
-      let intermediate = accumulator
+        return source((value) => {
+          push(
+            (intermediate =
+              created && intermediate === reduce
+                ? value
+                : reduce(intermediate, value))
+          )
 
-      return source((value) => {
-        push(
-          intermediate = created && intermediate === undefined
-            ? value
-            : reduce(intermediate, value)
-        )
-
-        if (created) created = false
+          if (created) created = false
+        })
       })
-    })
-  }
-)
+    : (anotherSource) => scan(anotherSource, source, accumulator)
+}
 
-export const take = operator(
-  (source, amount) =>
-    takeWhile(source, () => amount && amount--)
-)
+export function take(source, amount) {
+  return isStream(source)
+    ? takeWhile(source, () => amount && amount--)
+    : (anotherSource) => take(anotherSource, source)
+}
 
-export const takeWhile = operator(
-  (source, callback) =>
-    from((push) => {
-      let stop
+export function takeWhile(source, callback) {
+  return callback
+    ? from((push) => {
+        let stop
 
-      const clear = () => {
-        stop?.()
-        stop = null
-      }
+        const clear = () => {
+          stop?.()
+          stop = null
+        }
 
-      stop = source((value) =>
-        callback(value) ? push(value) : clear()
-      )
+        stop = source((value) => (callback(value) ? push(value) : clear()))
 
-      return clear
-    })
-)
+        return clear
+      })
+    : (anotherSource) => takeWhile(anotherSource, source)
+}
 
-export const skip = operator(
-  (source, amount) =>
-    filter(source, () => !(amount && amount--))
-)
+export function skip(source, amount) {
+  return isStream(source)
+    ? filter(source, () => !(amount && amount--))
+    : (anotherSource) => skip(anotherSource, source)
+}
 
-export const skipWhile = operator(
-  (source, callback) => {
+export function skipWhile(source, callback) {
+  if (callback) {
     let skipping = true
 
-    return filter(source, (value) => skipping ? !(skipping = callback(value)) : true)
-  }
-)
+    return filter(source, (value) =>
+      skipping ? !(skipping = callback(value)) : true
+    )
+  } else return (anotherSource) => skipWhile(anotherSource, source)
+}
 
-export const unique = operator(
-  (source, selector = (value) => value, flushes) => {
+export function unique(source, selector, flushes) {
+  if (isStream(source)) {
     const keys = new Set()
 
     const filteredSource = filter(source, (value) => {
-      const key = selector(value)
+      const key = selector?.(value) ?? value
 
       if (keys.has(key)) return false
       else {
@@ -134,40 +129,43 @@ export const unique = operator(
     return from((push) => {
       const stopFiltering = filteredSource(push)
 
-      const stopFlushing = flushes && flushes(() => keys.clear())
+      const stopFlushing = flushes?.(() => keys.clear())
 
       return () => {
+        keys.clear()
         stopFiltering()
         stopFlushing?.()
       }
     })
-  }
-)
+  } else return (anotherSource) => unique(anotherSource, source, selector)
+}
 
-export const merge = operator(
-  (source, other) => from((push) => {
-    const stopSource = source(push)
-    const stopOther = other(push)
+export function merge(source, other) {
+  return other
+    ? from((push) => {
+        const stopSource = source(push)
+        const stopOther = other(push)
 
-    return () => {
-      stopSource()
-      stopOther()
-    }
-  })
-)
+        return () => {
+          stopSource()
+          stopOther()
+        }
+      })
+    : (actualSource) => merge(actualSource, source)
+}
 
-export const distinct = operator(
-  (source, compare = Object.is) => {
+export function distinct(source, compare = Object.is) {
+  if (isStream(source)) {
     let firstSent = false
     let previous
 
     return filter(source, (value) => {
       previous = value
 
-      return firstSent ? !compare(previous, value) : firstSent = true
+      return firstSent ? !compare(previous, value) : (firstSent = true)
     })
-  }
-)
+  } else return (anotherSource) => distinct(anotherSource, source ?? compare)
+}
 
 export default {
   of,
@@ -183,5 +181,5 @@ export default {
   forEach,
   distinct,
   skipWhile,
-  takeWhile
+  takeWhile,
 }
