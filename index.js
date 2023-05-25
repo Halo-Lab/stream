@@ -38,11 +38,7 @@ export function map(source, callback) {
 
 export function filter(source, callback) {
   return callback
-    ? from((push) =>
-        source((value) => {
-          if (callback(value)) push(value)
-        })
-      )
+    ? from((push) => source((value) => callback(value) && push(value)))
     : (anotherSource) => filter(anotherSource, source)
 }
 
@@ -73,8 +69,10 @@ export function scan(source, accumulator, reduce = accumulator) {
 }
 
 export function take(source, amount) {
+  let _amount = amount
+
   return isStream(source)
-    ? takeWhile(source, () => amount && amount--)
+    ? takeWhile(source, () => _amount-- > 0 || ((_amount = amount), false))
     : (anotherSource) => take(anotherSource, source)
 }
 
@@ -82,13 +80,17 @@ export function takeWhile(source, callback) {
   return callback
     ? from((push) => {
         let stop
+        let cleared
 
         const clear = () => {
           stop?.()
           stop = null
+          cleared = true
         }
 
-        stop = source((value) => (callback(value) ? push(value) : clear()))
+        stop = source(
+          (value) => cleared || (callback(value) ? push(value) : clear())
+        )
 
         return clear
       })
@@ -97,47 +99,50 @@ export function takeWhile(source, callback) {
 
 export function skip(source, amount) {
   return isStream(source)
-    ? filter(source, () => !(amount && amount--))
+    ? from((push) => {
+        let _amount = amount
+
+        return source((value) => (_amount > 0 ? _amount-- : push(value)))
+      })
     : (anotherSource) => skip(anotherSource, source)
 }
 
 export function skipWhile(source, callback) {
-  if (callback) {
-    let skipping = true
+  return callback
+    ? from((push) => {
+        let skipping = true
 
-    return filter(source, (value) =>
-      skipping ? !(skipping = callback(value)) : true
-    )
-  } else return (anotherSource) => skipWhile(anotherSource, source)
+        return source((value) =>
+          skipping ? (skipping = callback(value)) || push(value) : push(value)
+        )
+      })
+    : (anotherSource) => skipWhile(anotherSource, source)
 }
 
 export function unique(source, selector, flushes) {
-  if (isStream(source)) {
-    const keys = new Set()
+  return isStream(source)
+    ? from((push) => {
+        const keys = new Set()
 
-    const filteredSource = filter(source, (value) => {
-      const key = selector?.(value) ?? value
+        const stopFiltering = source((value) => {
+          const key = selector?.(value) ?? value
 
-      if (keys.has(key)) return false
-      else {
-        keys.add(key)
+          if (!keys.has(key)) {
+            keys.add(key)
 
-        return true
-      }
-    })
+            push(value)
+          }
+        })
 
-    return from((push) => {
-      const stopFiltering = filteredSource(push)
+        const stopFlushing = flushes?.(() => keys.clear())
 
-      const stopFlushing = flushes?.(() => keys.clear())
-
-      return () => {
-        keys.clear()
-        stopFiltering()
-        stopFlushing?.()
-      }
-    })
-  } else return (anotherSource) => unique(anotherSource, source, selector)
+        return () => {
+          keys.clear()
+          stopFiltering()
+          stopFlushing?.()
+        }
+      })
+    : (anotherSource) => unique(anotherSource, source, selector)
 }
 
 export function merge(source, other) {
@@ -155,16 +160,20 @@ export function merge(source, other) {
 }
 
 export function distinct(source, compare = Object.is) {
-  if (isStream(source)) {
-    let firstSent = false
-    let previous
+  return isStream(source)
+    ? from((push) => {
+        let firstSent = false
+        let previous
 
-    return filter(source, (value) => {
-      previous = value
+        return source((value) => {
+          previous = value
 
-      return firstSent ? !compare(previous, value) : (firstSent = true)
-    })
-  } else return (anotherSource) => distinct(anotherSource, source ?? compare)
+          return firstSent
+            ? compare(previous, value) || push(value)
+            : ((firstSent = true), push(value))
+        })
+      })
+    : (anotherSource) => distinct(anotherSource, source ?? compare)
 }
 
 export default {
