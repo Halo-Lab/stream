@@ -168,7 +168,7 @@ export function distinct(source, compare = Object.is) {
         return source((value) => {
           previous = value
 
-          return firstSent
+          firstSent
             ? compare(previous, value) || push(value)
             : ((firstSent = true), push(value))
         })
